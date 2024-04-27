@@ -1,3 +1,4 @@
 com/example/demo/jboss/config/ConfigTestController.class
 com/example/demo/jboss/HelloController.class
 com/example/demo/jboss/DemojbossRestApplication.class
+com/example/demo/jboss/HelloMvcController.class

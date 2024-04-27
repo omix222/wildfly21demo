@@ -71,7 +71,7 @@
     </socket-binding-group>
     <deployments>
         <deployment name="demo-jboss.war" runtime-name="ROOT.war">
-            <content sha1="0404209a1d7debb0e7273ef3d0be5ecf6a667458"/>
+            <content sha1="aa599d09ee228e8abbcb3122dcd908ca85fa9e1a"/>
         </deployment>
     </deployments>
 </server>
