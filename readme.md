@@ -1,5 +1,14 @@
 # WildFlyのUberJarを試すプロジェクト
 
+Wildflyのバージョンはpom.xmlで指定しています。
+
+
+```xml
+    <properties>
+        <version.wildfly>32.0.0.Final</version.wildfly>
+    </properties>
+```
+
 ## How to run
 
 Set Java 17
