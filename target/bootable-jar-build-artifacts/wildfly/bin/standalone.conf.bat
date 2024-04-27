@@ -45,8 +45,11 @@ rem # Specify options to pass to the Java VM. Note, there are some additional
 rem # options that are always passed by run.bat.
 rem #
 
-rem # JVM memory allocation pool parameters - modify as appropriate.
-set "JAVA_OPTS=-Xms64M -Xmx512M -XX:MetaspaceSize=96M -XX:MaxMetaspaceSize=256m"
+if "x%JBOSS_JAVA_SIZING%" == "x" (
+    rem # JVM memory allocation pool parameters - modify as appropriate.
+    set "JBOSS_JAVA_SIZING=-Xms64M -Xmx512M -XX:MetaspaceSize=96M -XX:MaxMetaspaceSize=256m"
+)
+set "JAVA_OPTS=%JBOSS_JAVA_SIZING%"
 
 rem # Prefer IPv4
 set "JAVA_OPTS=%JAVA_OPTS% -Djava.net.preferIPv4Stack=true"
@@ -54,6 +57,8 @@ set "JAVA_OPTS=%JAVA_OPTS% -Djava.net.preferIPv4Stack=true"
 rem # Make Byteman classes visible in all module loaders
 rem # This is necessary to inject Byteman rules into AS7 deployments
 set "JAVA_OPTS=%JAVA_OPTS% -Djboss.modules.system.pkgs=org.jboss.byteman"
+
+set "JAVA_OPTS=%JAVA_OPTS% -Djava.awt.headless=true"
 
 rem # Sample JPDA settings for remote socket debugging
 rem set "JAVA_OPTS=%JAVA_OPTS% -agentlib:jdwp=transport=dt_socket,address=8787,server=y,suspend=n"
@@ -80,6 +85,14 @@ rem set "GC_LOG=true"
 
 rem # Uncomment and edit to use a custom java.security file to override all the Java security properties
 rem set "JAVA_OPTS=%JAVA_OPTS% -Djava.security.properties==C:\path\to\custom\java.security"
+
+rem # Default JDK_SERIAL_FILTER settings
+if "x%JDK_SERIAL_FILTER%" == "x" (
+  set "JDK_SERIAL_FILTER=maxbytes=10485760;maxdepth=128;maxarray=100000;maxrefs=300000"
+)
+
+rem # Uncomment the following line to disable jdk.serialFilter settings
+rem set "DISABLE_JDK_SERIAL_FILTER=true"
 
 :JAVA_OPTS_SET
 

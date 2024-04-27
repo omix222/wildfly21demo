@@ -1,4 +1,17 @@
-# MicroProfile generated Application
+# WildFlyのUberJarを試すプロジェクト
+
+## How to run
+
+Set Java 17
+
+    ```shell
+    sdk use java 17.0.0-open
+    ```
+or
+
+    ```shell
+    sdk use java 17.0.5-amzn
+    ```
 
 ## Introduction
 

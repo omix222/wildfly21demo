@@ -10,12 +10,13 @@ rem         standalone.bat --debug 9797
 @if not "%ECHO%" == ""  echo %ECHO%
 setlocal
 
+rem Identifies the launch script type.
+set JBOSS_LAUNCH_SCRIPT=batch
 rem By default debug mode is disable.
 set DEBUG_MODE=false
 set DEBUG_PORT_VAR=8787
 rem Set to all parameters by default
 set "SERVER_OPTS=%*"
-
 
 if NOT "x%DEBUG%" == "x" (
   set "DEBUG_MODE=%DEBUG%
@@ -34,11 +35,15 @@ if "%OS%" == "Windows_NT" (
   set DIRNAME=.\
 )
 setlocal EnableDelayedExpansion
+call "!DIRNAME!common.bat" :commonConf
 rem check for the security manager system property
 echo(!SERVER_OPTS! | findstr /r /c:"-Djava.security.manager" > nul
 if not errorlevel == 1 (
-    echo ERROR: The use of -Djava.security.manager has been removed. Please use the -secmgr command line argument or SECMGR=true environment variable.
-    GOTO :EOF
+    echo(!SERVER_OPTS! | findstr /r /c:"-Djava.security.manager=allow" > nul
+    if errorlevel == 1 (
+        echo ERROR: The use of -Djava.security.manager has been removed. Please use the -secmgr command line argument or SECMGR=true environment variable.
+        GOTO :EOF
+    )
 )
 setlocal DisableDelayedExpansion
 
@@ -101,6 +106,22 @@ if exist "%STANDALONE_CONF%" (
    echo Config file not found "%STANDALONE_CONF%"
 )
 
+rem Sanitize JAVA_OPTS
+rem Currently escaping only | characters any other might be added if needed
+setlocal EnableDelayedExpansion
+
+rem If characters are already escaped then IS_SANITIZED is set to true and JAVA__OPTS are left as they are
+for %%C in (^^^|) do (
+  if not "!JAVA_OPTS:%%C=!"=="!JAVA_OPTS!" set IS_SANITIZED=true
+)
+if not "!IS_SANITIZED!" == "true" (
+  for %%C in (^|) do (
+    set "JAVA_OPTS=!JAVA_OPTS:%%C=^%%C!"
+  )
+)
+
+setlocal DisableDelayedExpansion
+
 if NOT "x%DEBUG_PORT%" == "x" (
   set DEBUG_PORT_VAR=%DEBUG_PORT%
 )
@@ -142,16 +163,11 @@ if "x%JAVA_HOME%" == "x" (
 
 "%JAVA%" --add-modules=java.se -version >nul 2>&1 && (set MODULAR_JDK=true) || (set MODULAR_JDK=false)
 
-if not "%PRESERVE_JAVA_OPTS%" == "true" (
-  rem Add -client to the JVM options, if supported (32 bit VM), and not overriden
-  echo "%JAVA_OPTS%" | findstr /I \-server > nul
-  if errorlevel == 1 (
-    "%JAVA%" -client -version 2>&1 | findstr /I /C:"Client VM" > nul
-    if not errorlevel == 1 (
-      set "JAVA_OPTS=-client %JAVA_OPTS%"
-    )
-  )
-)
+setlocal EnableDelayedExpansion
+
+:SET_SERVER_END
+
+setlocal DisableDelayedExpansion
 
 rem Find jboss-modules.jar, or we can't continue
 if exist "%JBOSS_HOME%\jboss-modules.jar" (
@@ -195,7 +211,7 @@ for %%a in (!CONSOLIDATED_OPTS!) do (
 )
 
 rem If the -Djava.security.manager is found, enable the -secmgr and include a bogus security manager for JBoss Modules to replace
-echo(!JAVA_OPTS! | findstr /r /c:"-Djava.security.manager" > nul && (
+echo("!JAVA_OPTS!" | findstr /r /c:"-Djava.security.manager" > nul && (
     echo ERROR: The use of -Djava.security.manager has been removed. Please use the -secmgr command line argument or SECMGR=true environment variable.
     GOTO :EOF
 )
@@ -222,6 +238,18 @@ if "x%JBOSS_CONFIG_DIR%" == "x" (
 setlocal EnableDelayedExpansion
 call "!DIRNAME!common.bat" :setModularJdk
 setlocal DisableDelayedExpansion
+
+if not "%PRESERVE_JAVA_OPTS%" == "true" (
+  rem Add -Djdk.serialFilter if not specified
+  echo "%JAVA_OPTS%" | findstr /I "\-Djdk.serialFilter" > nul
+  if errorlevel == 1 (
+    if "x%DISABLE_JDK_SERIAL_FILTER%" == "x" (
+      setlocal EnableDelayedExpansion
+      set "JAVA_OPTS=!JAVA_OPTS! -Djdk.serialFilter="!JDK_SERIAL_FILTER!""
+      setlocal DisableDelayedExpansion
+    )
+  )
+)
 
 if not "%PRESERVE_JAVA_OPT%" == "true" (
     if "%GC_LOG%" == "true" (
@@ -251,7 +279,7 @@ if not "%PRESERVE_JAVA_OPT%" == "true" (
             )
             "!JAVA!" !TMP_PARAM! -version > nul 2>&1
             if not errorlevel == 1 (
-               set "JAVA_OPTS=%JAVA_OPTS% !TMP_PARAM!"
+               set "JAVA_OPTS=!JAVA_OPTS! !TMP_PARAM!"
             )
             rem Remove the gc.log file from the -version check
             del /F /Q "%JBOSS_LOG_DIR%\gc.log" > nul 2>&1
@@ -263,6 +291,10 @@ if not "%PRESERVE_JAVA_OPT%" == "true" (
     setlocal EnableDelayedExpansion
     call "!DIRNAME!common.bat" :setDefaultModularJvmOptions !JAVA_OPTS!
     set "JAVA_OPTS=!JAVA_OPTS! !DEFAULT_MODULAR_JVM_OPTIONS!"
+
+    rem Set default Security Manager configuration value
+    call "!DIRNAME!common.bat" :setSecurityManagerDefault
+    set "JAVA_OPTS=!JAVA_OPTS! !SECURITY_MANAGER_CONFIG_OPTION!"
     setlocal DisableDelayedExpansion
 )
 
@@ -308,7 +340,14 @@ echo.
       %SERVER_OPTS%
 
 if %errorlevel% equ 10 (
-	goto RESTART
+    echo Restarting...
+    goto RESTART
+)
+
+if %errorlevel% equ 20 (
+    echo Executing Installation Manager...
+    call "%JBOSS_HOME%\bin\installation-manager.bat" "%JBOSS_HOME%" "%JBOSS_CONFIG_DIR%\logging.properties"
+    goto RESTART
 )
 
 :END

@@ -14,13 +14,13 @@
 # this always be set). If set, then "%JAVA_HOME%\bin\java" will be used as
 # the Java VM executable; otherwise, "%JAVA%" will be used (see below).
 #
-# $JAVA_HOME="C:\opt\jdk1.8.0"
+# $JAVA_HOME="C:\opt\jdk11"
 
 #
 # Specify the exact Java VM executable to use - only used if JAVA_HOME is
 # not set. Default is "java".
 #
-# $JAVA="C:\opt\jdk1.8.0\bin\java"
+# $JAVA="C:\opt\jdk11\bin\java"
 
 #
 # Specify options to pass to the Java VM. Note, there are some additional
@@ -38,11 +38,10 @@ if (-Not $JAVA_OPTS) {
 
     $JAVA_OPTS = @()
 
-    # JVM memory allocation pool parameters - modify as appropriate.
-    $JAVA_OPTS += '-Xms64M'
-    $JAVA_OPTS += '-Xmx512M'
-    $JAVA_OPTS += '-XX:MetaspaceSize=96M'
-    $JAVA_OPTS += '-XX:MaxMetaspaceSize=256m'
+    if (-Not(test-path env:JBOSS_JAVA_SIZING)) {
+        $env:JBOSS_JAVA_SIZING = "-Xms64M -Xmx512M -XX:MetaspaceSize=96M -XX:MaxMetaspaceSize=256m"
+    }
+    $JAVA_OPTS += String-To-Array($env:JBOSS_JAVA_SIZING)
 
     # Reduce the RMI GCs to once per hour for Sun JVMs.
     #$JAVA_OPTS += '-Dsun.rmi.dgc.client.gcInterval=3600000'
@@ -56,6 +55,8 @@ if (-Not $JAVA_OPTS) {
     # Make Byteman classes visible in all module loaders
     # This is necessary to inject Byteman rules into AS7 deployments
     $JAVA_OPTS += "-Djboss.modules.system.pkgs=$JBOSS_MODULES_SYSTEM_PKGS"
+
+    $JAVA_OPTS += '-Djava.awt.headless=true'
 
     # Set the default configuration file to use if -c or --server-config are not used
     #$JAVA_OPTS += '-Djboss.server.default.config=standalone.xml'
@@ -75,6 +76,16 @@ if (-Not $JAVA_OPTS) {
 
     # Uncomment and edit to use a custom java.security file to override all the Java security properties
     # $JAVA_OPTS += '-Djava.security.properties==C:\path\to\custom\java.security'
+
+    # Default JDK_SERIAL_FILTER settings
+    #
+    if (-Not(test-path env:JDK_SERIAL_FILTER)) {
+        $JDK_SERIAL_FILTER = 'maxbytes=10485760;maxdepth=128;maxarray=100000;maxrefs=300000'
+    }
+
+    # Uncomment the following line to disable jdk.serialFilter settings
+    #
+    # $DISABLE_JDK_SERIAL_FILTER=$true
 }
 
 # Uncomment this to run with a security manager enabled

@@ -1,32 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ JBoss, Home of Professional Open Source.
-  ~ Copyright 2010, Red Hat, Inc., and individual contributors
-  ~ as indicated by the @author tags. See the copyright.txt file in the
-  ~ distribution for a full listing of individual contributors.
-  ~
-  ~ This is free software; you can redistribute it and/or modify it
-  ~ under the terms of the GNU Lesser General Public License as
-  ~ published by the Free Software Foundation; either version 2.1 of
-  ~ the License, or (at your option) any later version.
-  ~
-  ~ This software is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-  ~ Lesser General Public License for more details.
-  ~
-  ~ You should have received a copy of the GNU Lesser General Public
-  ~ License along with this software; if not, write to the Free
-  ~ Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-  ~ 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+  ~ Copyright The WildFly Authors
+  ~ SPDX-License-Identifier: Apache-2.0
   -->
-<module name="javax.servlet.jsp.api" xmlns="urn:jboss:module:1.5">
-    <dependencies>
-        <module name="javax.servlet.api" export="true"/>
-        <module name="org.glassfish.jakarta.el" export="true"/>
-    </dependencies>
+<module-alias name="javax.servlet.jsp.api" target-name="jakarta.servlet.jsp.api" xmlns="urn:jboss:module:1.9"/>
+<!--
+     WARNING: This module is DEPRECATED and will be removed in a future release.
 
-    <resources>
-        <resource-root path="jboss-jsp-api_2.3_spec-2.0.0.Final.jar"/>
-    </resources>
-</module>
+     References to this module should be changed to the 'jakarta' module for
+     which this module is an alias.
+
+     Note that despite its name this module does not expose javax.* package namespace
+     APIs from Jakarta EE 8 or earlier. It exposes the jakarta.* package namespace
+     APIs from the module it aliases.
+
+     This module only exists to ease migration from the old javax.* namespace to
+     the current jakarta.* namespace by allowing references to the old module names
+     to temporarily work. Such references should be updated.
+
+     (Note that an xml comment is used here instead of the usual 'jboss.api=deprecated'
+     property child element only because the 'module-alias' element and associated
+     Java classes do not support property child elements.)
+-->
